@@ -207,6 +207,23 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    public boolean dispatchKeyEvent(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.KEYCODE_NOTIFICATION) {
+            if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0) {
+                try {
+                    Intent si = new Intent(android.provider.Settings.ACTION_SETTINGS);
+                    si.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(si);
+                } catch (Exception ex) {
+                    toast("Nu pot deschide setările");
+                }
+            }
+            return true;
+        }
+        return super.dispatchKeyEvent(e);
+    }
+
+    @Override
     public boolean onKeyDown(int code, KeyEvent e) {
         if (code == KeyEvent.KEYCODE_BACK) {
             if (over.getVisibility() == View.VISIBLE) {
