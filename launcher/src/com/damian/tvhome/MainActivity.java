@@ -349,18 +349,7 @@ public class MainActivity extends Activity {
         public void openTv() {
             runOnUiThread(new Runnable() {
                 public void run() {
-                    try {
-                        Intent i = new Intent();
-                        i.setClassName("com.tcl.tv", "com.tcl.player.TVActivity");
-                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(i);
-                    } catch (Exception e) {
-                        Intent i = getPackageManager().getLaunchIntentForPackage("com.tcl.tv");
-                        if (i != null) {
-                            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(i);
-                        } else toast("Nu găsesc aplicația TV");
-                    }
+                    if (!LiveTv.open(MainActivity.this)) toast("Nu găsesc aplicația TV");
                 }
             });
         }

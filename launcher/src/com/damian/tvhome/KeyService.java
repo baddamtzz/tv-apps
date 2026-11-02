@@ -14,6 +14,7 @@ public class KeyService extends AccessibilityService {
     private static final int CHANNELS = 4001;
     private static final String TV = "com.tcl.tv";
     private String front = "";
+    private String frontCls = "";
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent e) {
@@ -22,20 +23,16 @@ public class KeyService extends AccessibilityService {
         String s = p.toString();
         if (s.equals("android") || s.startsWith("com.android.systemui")) return;
         front = s;
+        CharSequence k = e.getClassName();
+        frontCls = k == null ? "" : k.toString();
     }
 
     @Override
     protected boolean onKeyEvent(KeyEvent e) {
         if (e.getKeyCode() != CHANNELS) return false;
-        if (TV.equals(front)) return false;
+        if (TV.equals(front) && !frontCls.endsWith("ThirdPartActivity")) return false;
         if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0) {
-            try {
-                Intent i = new Intent();
-                i.setClassName(TV, "com.tcl.player.TVActivity");
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(i);
-            } catch (Exception ignored) {
-            }
+            LiveTv.open(this);
         }
         return true;
     }
