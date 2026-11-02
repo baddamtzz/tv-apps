@@ -87,7 +87,7 @@ var SPEC={tv:{id:'tv',l:'TV',i:'ti-device-tv',c:'#7fd0ff',go:function(){TV.openT
 var ITEMS={},ORDER=[],HIDDEN=[],ALL=[],ICONS={};
 var S={mode:'nav',row:'A',ia:0,ib:0,ir:0,snap:null};
 var TILES={A:[],B:[],R:[]},R_ITEMS=[];
-var B_ITEMS=[{id:'src',l:'Surse',i:'ti-plug-connected',go:function(){openSources()}},{id:'wifi',l:'Wi-Fi',i:'ti-wifi',go:function(){TV.settings('android.settings.WIFI_SETTINGS')}},{id:'set',l:'Setări',i:'ti-settings',go:function(){TV.settings('android.settings.SETTINGS')}},{id:'all',l:'Toate aplicațiile',i:'ti-apps',go:function(){openAll()}},{id:'opt',l:'Opțiuni',i:'ti-adjustments',go:function(){openOptions()}}];
+var B_ITEMS=[{id:'ps5',l:'PS5',i:'ti-device-gamepad-2',go:function(){openPs5()}},{id:'src',l:'Surse',i:'ti-plug-connected',go:function(){openSources()}},{id:'wifi',l:'Wi-Fi',i:'ti-wifi',go:function(){TV.settings('android.settings.WIFI_SETTINGS')}},{id:'set',l:'Setări',i:'ti-settings',go:function(){TV.settings('android.settings.SETTINGS')}},{id:'all',l:'Toate aplicațiile',i:'ti-apps',go:function(){openAll()}},{id:'opt',l:'Opțiuni',i:'ti-adjustments',go:function(){openOptions()}}];
 function launchApp(p){noteRecent(p);TV.launch(p)}
 function recents(){return jget('recent',[])}
 function noteRecent(p){var r=recents().filter(function(x){return x!==p});r.unshift(p);TV.set('recent',JSON.stringify(r.slice(0,8)))}
@@ -206,6 +206,13 @@ function pfocus(i){
  var r=$('pring');r.style.left=(c.offsetLeft-6)+'px';r.style.top=(c.offsetTop-6)+'px';r.style.width=(c.offsetWidth+12)+'px';r.style.height=(c.offsetHeight+12)+'px';
  var g=$('pg');if(c.offsetTop+c.offsetHeight>g.scrollTop+g.clientHeight)g.scrollTop=c.offsetTop+c.offsetHeight-g.clientHeight+20;if(c.offsetTop<g.scrollTop)g.scrollTop=Math.max(0,c.offsetTop-20)}
 function closePanel(){S.mode='nav';$('panel').style.display='none'}
+var PS5_ID='com.tcl.tvinput/.TvPassThroughService/HDMI100008';
+function openPs5(){
+ var arr=[];try{arr=JSON.parse(TV.inputs())}catch(e){}
+ var x=arr.filter(function(i){return i.pass&&/\/HDMI1\d*$/.test(i.id)})[0];
+ var id=x?x.id:(TV.get('ps5_id')||PS5_ID);
+ if(x)TV.set('ps5_id',id);else toast('PS5 nu răspunde pe CEC, încerc HDMI 1…',2400);
+ TV.openInput(id)}
 function openSources(){
  var arr=[];try{arr=JSON.parse(TV.inputs())}catch(e){}
  var items=[{id:'tvmenu',l:'TV (meniul stock)',i:'ti-device-tv',go:function(){TV.openTv()}}];
