@@ -6,7 +6,7 @@
 <title>Filme și seriale</title>
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:#05060a}
+html,body{margin:0;height:100%;background:#05060a;overflow:hidden}
 body{display:flex;justify-content:center;align-items:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 #stage{position:relative;flex:none;width:1280px;height:720px;overflow:hidden;border-radius:20px;background:#0a0b12;color:#fff;user-select:none}
 .bg{position:absolute;inset:-70px;background-size:cover;background-position:center 20%;filter:blur(38px) brightness(.5) saturate(1.3);transition:opacity .9s;opacity:0}
@@ -138,7 +138,7 @@ else if(k==='Enter'&&R[cur.r]){detail(R[cur.r].items[cur.c])}});
 function tick(){var n=new Date;$('ck').textContent=('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2)}
 tick();setInterval(tick,20000);
 $('gn').textContent='IMDb · actualizat '+dmy(D.generated.slice(0,10))+(D.lb&&D.lb.user?' · Letterboxd @'+D.lb.user:'');
-function fit(){$('stage').style.zoom=Math.min((innerWidth-24)/1280,(innerHeight-24)/720)}
+function fit(){$('stage').style.zoom=Math.min((innerWidth-24)/1280,(innerHeight-24)/720);scrollTo(0,0);document.body.scrollLeft=0;document.documentElement.scrollLeft=0}
 fit();addEventListener('resize',fit);
 render();
 </script>
