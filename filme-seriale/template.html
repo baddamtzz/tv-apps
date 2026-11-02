@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1">
 <title>Filme și seriale</title>
 <style>
 *{box-sizing:border-box}
@@ -138,7 +138,7 @@ else if(k==='Enter'&&R[cur.r]){detail(R[cur.r].items[cur.c])}});
 function tick(){var n=new Date;$('ck').textContent=('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2)}
 tick();setInterval(tick,20000);
 $('gn').textContent='IMDb · actualizat '+dmy(D.generated.slice(0,10))+(D.lb&&D.lb.user?' · Letterboxd @'+D.lb.user:'');
-function fit(){$('stage').style.zoom=Math.min((innerWidth-24)/1280,(innerHeight-24)/720);scrollTo(0,0);document.body.scrollLeft=0;document.documentElement.scrollLeft=0}
+function fit(){$('stage').style.zoom=Math.min((document.documentElement.clientWidth-24)/1280,(document.documentElement.clientHeight-24)/720);scrollTo(0,0);document.body.scrollLeft=0;document.documentElement.scrollLeft=0}
 fit();addEventListener('resize',fit);
 render();
 </script>
