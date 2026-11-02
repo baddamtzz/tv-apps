@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1">
 <title>Filme și seriale</title>
 <style>
-*{box-sizing:border-box}
+*{box-sizing:border-box;outline:none;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:#05060a;overflow:hidden}
-body{display:flex;justify-content:center;align-items:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
-#stage{position:relative;flex:none;width:1280px;height:720px;overflow:hidden;border-radius:20px;background:#0a0b12;color:#fff;user-select:none}
-.bg{position:absolute;inset:-70px;background-size:cover;background-position:center 20%;filter:blur(38px) brightness(.5) saturate(1.3);transition:opacity .9s;opacity:0}
-.bg.on{opacity:1}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;margin:-360px 0 0 -640px;overflow:hidden;background:#0a0b12;color:#fff;user-select:none}
+.bg{position:absolute;inset:0;background-size:cover;background-position:center 20%;opacity:0}
+.bg.on{opacity:.5}
 .shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,8,14,.9) 0%,rgba(7,8,14,.5) 58%,rgba(7,8,14,.15) 100%),linear-gradient(0deg,rgba(7,8,14,.96) 0%,rgba(7,8,14,0) 52%)}
 #top{position:absolute;left:0;right:0;top:0;height:68px;display:flex;align-items:center;gap:10px;padding:0 56px;z-index:6}
 #top .bk{font-size:26px;color:rgba(255,255,255,.7);margin-right:6px}
 #top .nm{font-size:19px;font-weight:600;margin-right:20px}
-.tab{font-size:17px;color:rgba(255,255,255,.62);padding:8px 18px;border-radius:99px;cursor:pointer;transition:background .2s,color .2s,transform .15s}
-.tab:hover{color:#fff;transform:scale(1.04)}
+.tab{font-size:17px;color:rgba(255,255,255,.62);padding:8px 18px;border-radius:99px;cursor:pointer}
 .tab.on{background:#fff;color:#0a0b12;font-weight:600}
+.tab.f{box-shadow:0 0 0 3px #fff;color:#fff}.tab.on.f{color:#0a0b12}
 #clk{margin-left:auto;text-align:right;font-size:20px;font-weight:500;line-height:1.1}
 #clk small{display:block;font-size:11.5px;color:rgba(255,255,255,.5);font-weight:400;margin-top:3px}
 #hero{position:absolute;left:56px;top:92px;width:700px;z-index:3}
@@ -32,36 +32,33 @@ body{display:flex;justify-content:center;align-items:center;font-family:-apple-s
 #cast{font-size:15px;color:rgba(255,255,255,.55);margin-top:10px}
 #seen{margin-top:10px;font-size:14px;color:#00e054;font-weight:600}
 #pw{position:absolute;right:96px;top:84px;z-index:3;perspective:900px}
-#pst{width:228px;height:342px;border-radius:16px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.65);background:#161824;animation:fl 5s ease-in-out infinite}
+#pst{width:228px;height:342px;border-radius:16px;overflow:hidden;box-shadow:0 14px 28px rgba(0,0,0,.5);background:#161824}
 #pst img{width:100%;height:100%;object-fit:cover;display:block}
-#rows{position:absolute;left:0;right:0;top:424px;bottom:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;scroll-behavior:smooth;padding-bottom:230px;z-index:4}
-#rows::-webkit-scrollbar{display:none}
-.row{padding:0 0 6px 56px}
+#rows{position:absolute;left:0;right:0;top:424px;bottom:0;overflow:hidden;z-index:4}
+#rin{will-change:transform;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.row{height:270px;padding-left:56px}
 .rt{font-size:20px;font-weight:600}
 .rs{font-size:13px;color:rgba(255,255,255,.5);font-weight:400;margin-left:12px}
-.sc{display:flex;gap:16px;overflow-x:auto;overflow-y:hidden;padding:14px 56px 16px 6px;margin-left:-6px;scrollbar-width:none;scroll-behavior:smooth}
-.sc::-webkit-scrollbar{display:none}
-.c{position:relative;flex:none;width:136px;height:204px;border-radius:12px;overflow:hidden;cursor:pointer;background:#161824;transition:transform .25s cubic-bezier(.34,1.5,.5,1),box-shadow .25s;animation:ci .55s cubic-bezier(.2,.9,.3,1.15) backwards;animation-delay:calc(var(--i)*45ms)}
-.c.f{transform:scale(1.1);box-shadow:0 0 0 3px #fff,0 18px 34px rgba(0,0,0,.65);z-index:2}
+.sc{overflow:hidden;padding:14px 0 16px 12px;margin-left:-12px;height:236px}
+.st{display:flex;gap:16px;will-change:transform;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.c{position:relative;flex:none;width:136px;height:204px;border-radius:12px;overflow:hidden;cursor:pointer;background:#161824;transition:transform .18s ease-out}
+.c.f{transform:scale(1.08);box-shadow:0 0 0 3px #fff;z-index:2}
+.tz .c.f{transform:none;box-shadow:none}
 .c img{width:100%;height:100%;object-fit:cover;display:block}
 .rb{position:absolute;left:6px;bottom:6px;font-size:13px;font-weight:700;background:rgba(0,0,0,.74);padding:2px 7px;border-radius:6px;color:#f5c518}
 .rb.g{color:#00e054;letter-spacing:1px;font-size:12px}
 .sn{position:absolute;right:6px;top:6px;font-size:10.5px;font-weight:800;background:#00c030;color:#04210d;padding:2px 6px;border-radius:5px;letter-spacing:.4px}
-.rk{position:absolute;left:8px;top:2px;font-size:34px;font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.9)}
+.rk{position:absolute;left:8px;top:2px;font-size:34px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.9)}
 .msg{padding:30px 56px;font-size:17px;color:rgba(255,255,255,.7);max-width:700px;line-height:1.5}
-#dt{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(4,5,10,.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+#dt{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(4,5,10,.93)}
 #dc{display:flex;gap:34px;width:960px;padding:34px;background:rgba(20,22,34,.92);border:1px solid rgba(255,255,255,.1);border-radius:22px}
 #dc img{width:260px;height:390px;border-radius:14px;object-fit:cover;flex:none}
 #dc h2{font-size:36px;margin:0 0 10px;letter-spacing:-1px;line-height:1.1}
 #dc .ch{display:inline-block;font-size:13px;padding:4px 11px;border-radius:99px;border:1px solid rgba(255,255,255,.25);margin:0 6px 6px 0;color:rgba(255,255,255,.8)}
 #dc p{font-size:16px;line-height:1.55;color:rgba(255,255,255,.82);margin:12px 0}
-#dc a{display:inline-block;margin:10px 10px 0 0;font-size:14px;color:#fff;text-decoration:none;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:9px 16px;border-radius:10px}
-#dc a:hover{background:rgba(255,255,255,.22)}
+#dc .hint{margin-top:16px;font-size:14px;color:rgba(255,255,255,.45)}
 .bar{height:6px;border-radius:3px;background:rgba(255,255,255,.15);margin-top:8px;width:260px;overflow:hidden}
-.bar i{display:block;height:100%;background:#f5c518;border-radius:3px;animation:gr .8s ease-out}
-@keyframes ci{0%{opacity:0;transform:translateY(24px) scale(.9)}100%{opacity:1;transform:none}}
-@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-@keyframes gr{0%{width:0}}
+.bar i{display:block;height:100%;background:#f5c518;border-radius:3px}
 </style>
 </head>
 <body>
@@ -86,17 +83,18 @@ function gen(g){return (g||[]).slice(0,3).map(function(x){return GEN[x]||x}).joi
 var months=['ian.','feb.','mar.','apr.','mai','iun.','iul.','aug.','sept.','oct.','nov.','dec.'];
 function dmy(s){if(!s)return'';var p=s.split(/[- ]/);return (+p[2])+' '+months[+p[1]-1]+' '+p[0]}
 var seen={};((D.lb&&D.lb.items)||[]).forEach(function(x){seen[norm(x.title)+x.year]=x});
-var tab='movie',R=[],cur={r:0,c:0},bgOn=0,lastId=null;
+var tab='movie',R=[],cur={r:0,c:0},bgOn=0,TABS=['movie','series','lb'],zone='rows',tf=0,ht=0,cards=[],sts=[];
 
 function tabRows(){
 if(tab==='lb'){var L=D.lb||{items:[]};if(L.error||!L.items.length)return[];var its=L.items.map(function(x){x.lb=true;return x}),big=its.filter(function(x){return x.rating>=4.5});if(big.length<3)big=its.filter(function(x){return x.rating>=4});var rows=[{title:'Ce ai văzut recent',sub:'Jurnalul tău de pe Letterboxd, @'+L.user,items:its}];if(big.length>=3)rows.push({title:'Notele tale mari',sub:'Filmele pe care le-ai notat cel mai bine',items:big});return rows}
 return D.rows.filter(function(r){return r.kind===tab}).map(function(r){return{title:r.title,sub:r.sub,rank:r.id==='tm'||r.id==='ts',items:r.ids.map(function(i){return D.items[i]})}})}
 
-function card(it,r,ci){var sn=!it.lb&&seen[norm(it.title)+it.year];return '<div class="c" data-r="'+r+'" data-c="'+ci+'" style="--i:'+ci+'">'+(it.poster?'<img alt="" src="'+it.poster+'">':'')+(R[r].rank&&ci<10?'<span class="rk">'+(ci+1)+'</span>':'')+(sn?'<span class="sn">VĂZUT</span>':'')+(it.lb?(it.rating?'<span class="rb g">'+stars(it.rating)+'</span>':''):'<span class="rb">★ '+it.rating.toFixed(1).replace('.',',')+'</span>')+'</div>'}
-function render(){R=tabRows();var h='';R.forEach(function(r,ri){h+='<div class="row" data-r="'+ri+'"><div class="rt">'+esc(r.title)+'<span class="rs">'+esc(r.sub)+'</span></div><div class="sc">'+r.items.map(function(it,ci){return card(it,ri,ci)}).join('')+'</div></div>'});
+function card(it,r,ci){var sn=!it.lb&&seen[norm(it.title)+it.year];return '<div class="c" data-r="'+r+'" data-c="'+ci+'">'+(it.poster?'<img alt="" decoding="async" data-s="'+it.poster+'">':'')+(R[r].rank&&ci<10?'<span class="rk">'+(ci+1)+'</span>':'')+(sn?'<span class="sn">VĂZUT</span>':'')+(it.lb?(it.rating?'<span class="rb g">'+stars(it.rating)+'</span>':''):'<span class="rb">★ '+it.rating.toFixed(1).replace('.',',')+'</span>')+'</div>'}
+function render(){R=tabRows();var h='';R.forEach(function(r,ri){h+='<div class="row" data-r="'+ri+'"><div class="rt">'+esc(r.title)+'<span class="rs">'+esc(r.sub)+'</span></div><div class="sc"><div class="st">'+r.items.map(function(it,ci){return card(it,ri,ci)}).join('')+'</div></div></div>'});
 if(!R.length){var L=D.lb||{};h='<div class="msg">'+(tab==='lb'?(L.error||'Nu am găsit filme în jurnalul Letterboxd.')+'<br>Rulează <b>python3 actualizeaza.py USERNAME</b> cu contul tău.':'Nu sunt titluri.')+'</div>'}
-$('rows').innerHTML=h;$('rows').scrollTop=0;cur={r:0,c:0};if(R.length)focus(0,0,false);else{$('kick').textContent='';$('ttl').textContent=tab==='lb'?'Letterboxd':'';$('meta').innerHTML='';$('syn').textContent='';$('cast').textContent='';$('seen').textContent='';$('pst').innerHTML=''}}
+$('rows').innerHTML='<div id="rin">'+h+'</div>';cards=[];sts=[];document.querySelectorAll('.row').forEach(function(row){cards.push(row.querySelectorAll('.c'));sts.push(row.querySelector('.st'))});cur={r:0,c:0};if(R.length){hydrate(0,0);hydrate(1,0);focus(0,0,true)}else{$('kick').textContent='';$('ttl').textContent=tab==='lb'?'Letterboxd':'';$('meta').innerHTML='';$('syn').textContent='';$('cast').textContent='';$('seen').textContent='';$('pst').innerHTML=''}}
 
+function hydrate(r,c){var cs=cards[r];if(!cs)return;for(var i=Math.max(0,c-3);i<Math.min(cs.length,c+14);i++){var im=cs[i].firstChild;if(im&&im.tagName==='IMG'&&!im.src&&im.dataset.s)im.src=im.dataset.s}}
 function setBg(src){if(!src)return;var n=1-bgOn,e=$('b'+n);e.style.backgroundImage='url('+src+')';e.classList.add('on');$('b'+bgOn).classList.remove('on');bgOn=n}
 function hero(it,r,ci){
 var L=D.lb||{},rk=R[r].rank?' · #'+(ci+1):'';
@@ -111,36 +109,43 @@ $('cast').textContent=!it.lb&&it.cast?'Cu '+it.cast:'';
 var sn=!it.lb&&seen[norm(it.title)+it.year];$('seen').textContent=sn?'✓ Văzut de tine pe Letterboxd'+(sn.rating?' · '+stars(sn.rating):''):'';
 $('pst').innerHTML=it.poster?'<img alt="" src="'+it.poster+'">':'';
 setBg(it.poster);
-$('hero').animate([{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],{duration:380,easing:'cubic-bezier(.2,.9,.3,1.1)'});
-$('pst').firstChild&&$('pst').firstChild.animate([{transform:'scale(1.12)',opacity:.2},{transform:'none',opacity:1}],{duration:420,easing:'ease-out'});
-var rv=$('rv');if(rv&&!it.lb){var t0=performance.now(),to=it.rating;(function s(t){var p=Math.min(1,(t-t0)/500);rv.textContent=(to*(1-Math.pow(1-p,3))).toFixed(1).replace('.',',');if(p<1)requestAnimationFrame(s)})(t0)}}
+}
 
-function focus(r,c,kb){var old=document.querySelector('.c.f');if(old)old.classList.remove('f');var el=document.querySelector('.c[data-r="'+r+'"][data-c="'+c+'"]');if(!el)return;el.classList.add('f');var changed=(cur.r!==r||cur.c!==c)||!lastId;cur={r:r,c:c};var it=R[r].items[c],key=(it.id||it.title)+r;if(key!==lastId){lastId=key;hero(it,r,c)}
-if(kb){el.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});var row=el.closest('.row');if(row)$('rows').scrollTo({top:row.offsetTop-10,behavior:'smooth'})}}
-$('rows').addEventListener('mouseover',function(e){var c=e.target.closest('.c');if(c)focus(+c.dataset.r,+c.dataset.c,false)});
+function focus(r,c,now){var o=cards[cur.r]&&cards[cur.r][cur.c];if(o)o.classList.remove('f');cur={r:r,c:c};var el=cards[r]&&cards[r][c];if(!el)return;el.classList.add('f');hydrate(r,c);if(c===0)hydrate(r+1,0);
+$('rin').style.transform='translate3d(0,'+(-r*270)+'px,0)';sts[r].style.transform='translate3d('+(-Math.max(0,c-5)*152)+'px,0,0)';
+clearTimeout(ht);var go=function(){hero(R[r].items[c],r,c)};if(now)go();else ht=setTimeout(go,90)}
 $('rows').addEventListener('click',function(e){var c=e.target.closest('.c');if(c)detail(R[+c.dataset.r].items[+c.dataset.c])});
 
 function detail(it){var h='<img alt="" src="'+(it.poster||'')+'"><div style="min-width:0">';
-if(it.lb){h+='<div style="font-size:13px;letter-spacing:.14em;color:#00e054;text-transform:uppercase">Letterboxd · @'+esc((D.lb||{}).user)+'</div><h2>'+esc(it.title)+(it.year?' <span style="opacity:.5;font-weight:400">'+it.year+'</span>':'')+'</h2>'+(it.rating?'<div class="lbs" style="font-size:26px">'+stars(it.rating)+'</div>':'')+(it.date?'<div style="color:rgba(255,255,255,.6);font-size:15px;margin-top:4px">Văzut pe '+dmy(it.date)+(it.rewatch?' · revăzut':'')+'</div>':'')+'<p>'+esc(it.review||'Fără recenzie scrisă.')+'</p><a href="'+esc(it.link)+'" target="_blank" rel="noopener">Deschide pe Letterboxd ↗</a>'}
-else{var sn=seen[norm(it.title)+it.year];h+='<div style="font-size:13px;letter-spacing:.14em;color:rgba(255,255,255,.55);text-transform:uppercase">'+(it.type==='series'?'Serial':'Film')+'</div><h2>'+esc(it.title)+' <span style="opacity:.5;font-weight:400">'+it.year+(it.type==='series'?'–'+(it.end||''):'')+'</span></h2><div style="display:flex;align-items:center;gap:12px"><span class="imdb">IMDb</span><span style="font-size:26px;font-weight:700">'+it.rating.toFixed(1).replace('.',',')+'</span><span style="opacity:.6">/10 · '+fmtV(it.votes)+' voturi</span></div><div class="bar"><i style="width:'+it.rating*10+'%"></i></div><div style="margin:14px 0 4px">'+(it.genres||[]).map(function(g){return '<span class="ch">'+(GEN[g]||g)+'</span>'}).join('')+(it.runtime?'<span class="ch">'+runtime(it.runtime)+'</span>':'')+(it.net?'<span class="ch">'+esc(it.net)+'</span>':'')+'</div>'+(it.syn?'<p>'+esc(it.syn)+'</p>':'')+(it.cast?'<div style="color:rgba(255,255,255,.55);font-size:15px">Cu '+esc(it.cast)+'</div>':'')+(sn?'<div style="color:#00e054;font-weight:600;margin-top:10px">✓ Văzut de tine pe Letterboxd'+(sn.rating?' · '+stars(sn.rating):'')+'</div>':'')+'<a href="https://www.imdb.com/title/'+it.id+'/" target="_blank" rel="noopener">Deschide pe IMDb ↗</a>'}
-h+='<a href="#" id="dx">Închide</a></div>';$('dc').innerHTML=h;var d=$('dt');d.style.display='flex';d.animate([{opacity:0},{opacity:1}],{duration:220});$('dc').animate([{transform:'translateY(24px) scale(.96)',opacity:0},{transform:'none',opacity:1}],{duration:340,easing:'cubic-bezier(.2,.9,.3,1.1)'});$('dx').onclick=function(e){e.preventDefault();closeD()}}
-function closeD(){var d=$('dt');d.animate([{opacity:1},{opacity:0}],{duration:180}).onfinish=function(){d.style.display='none'}}
+if(it.lb){h+='<div style="font-size:13px;letter-spacing:.14em;color:#00e054;text-transform:uppercase">Letterboxd · @'+esc((D.lb||{}).user)+'</div><h2>'+esc(it.title)+(it.year?' <span style="opacity:.5;font-weight:400">'+it.year+'</span>':'')+'</h2>'+(it.rating?'<div class="lbs" style="font-size:26px">'+stars(it.rating)+'</div>':'')+(it.date?'<div style="color:rgba(255,255,255,.6);font-size:15px;margin-top:4px">Văzut pe '+dmy(it.date)+(it.rewatch?' · revăzut':'')+'</div>':'')+'<p>'+esc(it.review||'Fără recenzie scrisă.')+'</p>'}
+else{var sn=seen[norm(it.title)+it.year];h+='<div style="font-size:13px;letter-spacing:.14em;color:rgba(255,255,255,.55);text-transform:uppercase">'+(it.type==='series'?'Serial':'Film')+'</div><h2>'+esc(it.title)+' <span style="opacity:.5;font-weight:400">'+it.year+(it.type==='series'?'–'+(it.end||''):'')+'</span></h2><div style="display:flex;align-items:center;gap:12px"><span class="imdb">IMDb</span><span style="font-size:26px;font-weight:700">'+it.rating.toFixed(1).replace('.',',')+'</span><span style="opacity:.6">/10 · '+fmtV(it.votes)+' voturi</span></div><div class="bar"><i style="width:'+it.rating*10+'%"></i></div><div style="margin:14px 0 4px">'+(it.genres||[]).map(function(g){return '<span class="ch">'+(GEN[g]||g)+'</span>'}).join('')+(it.runtime?'<span class="ch">'+runtime(it.runtime)+'</span>':'')+(it.net?'<span class="ch">'+esc(it.net)+'</span>':'')+'</div>'+(it.syn?'<p>'+esc(it.syn)+'</p>':'')+(it.cast?'<div style="color:rgba(255,255,255,.55);font-size:15px">Cu '+esc(it.cast)+'</div>':'')+(sn?'<div style="color:#00e054;font-weight:600;margin-top:10px">✓ Văzut de tine pe Letterboxd'+(sn.rating?' · '+stars(sn.rating):'')+'</div>':'')+''}
+h+='<div class="hint">Apasă Înapoi sau OK ca să închizi</div></div>';$('dc').innerHTML=h;$('dt').style.display='flex'}
+function closeD(){$('dt').style.display='none'}
+window.onBack=function(){if($('dt').style.display==='flex'){closeD();return true}return false}
 $('dt').addEventListener('click',function(e){if(e.target===$('dt'))closeD()});
 
-function setTab(t){tab=t;lastId=null;document.querySelectorAll('.tab').forEach(function(x){x.classList.toggle('on',x.dataset.t===t)});render()}
-document.querySelectorAll('.tab').forEach(function(x){x.onclick=function(){setTab(x.dataset.t)}});
-document.addEventListener('keydown',function(e){var k=e.key;if($('dt').style.display==='flex'){if(k==='Escape'||k==='Backspace')closeD();return}
-if(k==='1')setTab('movie');else if(k==='2')setTab('series');else if(k==='3')setTab('lb');
-else if(k==='ArrowRight'||k==='ArrowLeft'){e.preventDefault();var n=cur.c+(k==='ArrowRight'?1:-1);if(R[cur.r]&&n>=0&&n<R[cur.r].items.length)focus(cur.r,n,true)}
-else if(k==='ArrowDown'||k==='ArrowUp'){e.preventDefault();var r=cur.r+(k==='ArrowDown'?1:-1);if(R[r])focus(r,Math.min(cur.c,R[r].items.length-1),true)}
-else if(k==='Enter'&&R[cur.r]){detail(R[cur.r].items[cur.c])}});
+function tabUi(){document.querySelectorAll('.tab').forEach(function(x,i){x.classList.toggle('on',x.dataset.t===tab);x.classList.toggle('f',zone==='tabs'&&i===tf)});$('stage').classList.toggle('tz',zone==='tabs')}
+function setTab(t){tab=t;tf=TABS.indexOf(t);render();tabUi()}
+document.querySelectorAll('.tab').forEach(function(x){x.onclick=function(){zone='tabs';setTab(x.dataset.t)}});
+document.addEventListener('keydown',function(e){var k=e.key;if($('dt').style.display==='flex'){if(k==='Escape'||k==='Backspace'||k==='Enter')closeD();e.preventDefault();return}
+if(k==='ArrowRight'||k==='ArrowLeft'||k==='ArrowDown'||k==='ArrowUp'||k==='Enter')e.preventDefault();
+if(zone==='tabs'){
+if(k==='ArrowRight'&&tf<2){tf++;tabUi()}else if(k==='ArrowLeft'&&tf>0){tf--;tabUi()}
+else if(k==='Enter'){setTab(TABS[tf])}
+else if(k==='ArrowDown'&&R.length){zone='rows';tabUi()}
+return}
+if(!R[cur.r])return;
+if(k==='ArrowRight'||k==='ArrowLeft'){var n=cur.c+(k==='ArrowRight'?1:-1);if(n>=0&&n<R[cur.r].items.length)focus(cur.r,n)}
+else if(k==='ArrowDown'){var r=cur.r+1;if(R[r])focus(r,Math.min(cur.c,R[r].items.length-1))}
+else if(k==='ArrowUp'){if(cur.r>0)focus(cur.r-1,Math.min(cur.c,R[cur.r-1].items.length-1));else{zone='tabs';tf=TABS.indexOf(tab);tabUi()}}
+else if(k==='Enter')detail(R[cur.r].items[cur.c])});
 
 function tick(){var n=new Date;$('ck').textContent=('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2)}
 tick();setInterval(tick,20000);
 $('gn').textContent='IMDb · actualizat '+dmy(D.generated.slice(0,10))+(D.lb&&D.lb.user?' · Letterboxd @'+D.lb.user:'');
-function fit(){$('stage').style.zoom=Math.min((document.documentElement.clientWidth-24)/1280,(document.documentElement.clientHeight-24)/720);scrollTo(0,0);document.body.scrollLeft=0;document.documentElement.scrollLeft=0}
+function fit(){$('stage').style.transform='scale('+Math.min(document.documentElement.clientWidth/1280,document.documentElement.clientHeight/720)+')'}
 fit();addEventListener('resize',fit);
-render();
+render();tabUi();
 </script>
 </body>
 </html>
