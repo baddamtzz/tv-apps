@@ -53,6 +53,19 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Readuce ecranul Acasă după ce sistemul deschide Google TV" />
         </service>
+        <service
+            android:name=".KeyService"
+            android:directBootAware="true"
+            android:label="@string/keysvc_label"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/keyservice" />
+        </service>
         <receiver
             android:name=".BootReceiver"
             android:exported="true">

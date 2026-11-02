@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keysvc_label">Taste telecomandă (Acasă)</string>
+    <string name="keysvc_desc">Prinde butonul de canale al telecomenzii și deschide TV-ul. Nu citește conținutul ecranului.</string>
+</resources>
