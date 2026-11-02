@@ -57,6 +57,14 @@ h1{font-size:1.25rem;font-weight:600;margin:0;letter-spacing:-.3px}
 .sp{width:1.625rem;height:1.625rem;border:3px solid var(--line);border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite}
 .spin{animation:spin .8s linear infinite;display:inline-block}
 footer{margin-top:1.875rem;text-align:center;font-size:0.6875rem;color:var(--mu);line-height:1.6}
+.acts{display:flex;align-items:center;gap:0.75rem;margin-top:1.125rem}
+.hintx{font-size:0.75rem;color:var(--mu)}
+.tg{display:flex;flex-wrap:wrap;gap:0.5rem}
+.tmb{font:inherit;font-size:0.8125rem;color:var(--tx);background:var(--card);border:1px solid var(--line);border-radius:0.75rem;padding:0.375rem 0.75rem;display:flex;align-items:center;gap:0.5rem;cursor:pointer}
+.tmb img{width:1.375rem;height:1.375rem;object-fit:contain}
+.tmb.on{border-color:#ffd34d}
+.tmb.on span::after{content:" ★";color:#ffd34d}
+.tmb.f{background:#2a3350;color:#fff}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -93,7 +101,9 @@ Promise.allSettled(COMP.map(function(c){return get(c,d)})).then(function(rs){loa
 var ok=rs.filter(function(r){return r.status==='fulfilled'});errs=rs.length-ok.length;
 if(!ok.length){$('out').innerHTML='<div class="err">Nu pot încărca rezultatele. Verifică conexiunea la internet și încearcă din nou.</div>';return}
 lastOk=new Date();data=ok.map(function(r){var v=r.value,seen={};v.evs=v.events.filter(function(e){if(seen[e.id])return false;seen[e.id]=1;return ymd(new Date(e.date))===d}).sort(function(a,b){return new Date(a.date)-new Date(b.date)});return v}).filter(function(v){return v.evs.length});render();sched()})}
-function stat(e){var s=e.status||{},t=s.type||{},n=t.name||'';if(t.state==='in'){var hl=/HALF/.test(n)&&/HALFTIME/.test(n);return{k:'live',t:hl?'Pauză':(s.displayClock||'LIVE')}}
+var showDate=false,fmtDM=new Intl.DateTimeFormat('ro-RO',{timeZone:TZ,day:'numeric',month:'short'});
+function stat(e){var r=stat0(e);if(showDate&&r.k!=='live'){var d=fmtDM.format(new Date(e.date));r.t=d+(r.k==='pre'?' '+r.t:(r.t!=='FT'?' · '+r.t:''))}return r}
+function stat0(e){var s=e.status||{},t=s.type||{},n=t.name||'';if(t.state==='in'){var hl=/HALF/.test(n)&&/HALFTIME/.test(n);return{k:'live',t:hl?'Pauză':(s.displayClock||'LIVE')}}
 if(t.state==='post'){var d=(t.shortDetail||'').toUpperCase();return{k:'post',t:/PEN/.test(d)?'Pen.':/AET/.test(d)?'Prel.':'FT'}}
 if(/POSTPON/.test(n))return{k:'x',t:'Amânat'};if(/CANCEL/.test(n))return{k:'x',t:'Anulat'};if(/SUSPEND/.test(n))return{k:'x',t:'Suspendat'};if(/DELAY/.test(n))return{k:'x',t:'Întârziat'};
 return{k:'pre',t:fmtT.format(new Date(e.date))}}
@@ -108,23 +118,54 @@ if(opened[id]&&has)o+=detG(id);
 if(note)o+='<div class="det" style="padding-bottom:8px;margin-top:-6px"><div></div><div class="note" style="grid-column:2/5">'+esc(note)+'</div></div>';return o}
 function render(){GL={};var live=0,tot=0;data.forEach(function(v){v.evs.forEach(function(e){tot++;if(e.status&&e.status.type&&e.status.type.state==='in')live++})});
 var top=data.filter(function(v){return v.c.g==='top'}),it=data.filter(function(v){return v.c.g==='int'});
-var chips=[['all','Toate',tot],['top','Top 5 ligi',top.reduce(function(a,v){return a+v.evs.length},0)],['int','Internațional',it.reduce(function(a,v){return a+v.evs.length},0)],['live','Live acum',live]];
-$('ch').innerHTML=chips.map(function(c){return'<button class="chip'+(filter===c[0]?' on':'')+'" data-f="'+c[0]+'">'+c[1]+'<span class="n">'+c[2]+'</span></button>'}).join('');
+var chips=[['all','Toate',tot],['top','Top 5 ligi',top.reduce(function(a,v){return a+v.evs.length},0)],['int','Internațional',it.reduce(function(a,v){return a+v.evs.length},0)],['live','Live acum',live],['fav','★ Favorite',FAV.length]];
+$('ch').innerHTML=chips.map(function(c){return'<button class="chip'+(filter===c[0]||(c[0]==='fav'&&filter==='pick')?' on':'')+'" data-f="'+c[0]+'">'+c[1]+'<span class="n">'+c[2]+'</span></button>'}).join('');
+document.title=(live?'('+live+' live) ':'')+'Rezultate fotbal';
+$('sub').textContent=tot+' meciuri'+(live?' · '+live+' în desfășurare':'')+' · Top 5 ligi și competiții internaționale';
+$('ft').innerHTML='Actualizat la '+fmtT.format(lastOk)+' · orele sunt în fusul București'+(errs?' · '+errs+' competiții nu s-au încărcat':'')+'<br>Date: ESPN (sursă neoficială, pot apărea întârzieri la scor)';
+if(filter==='fav'){renderFav();return}
+if(filter==='pick'){renderPick();return}
 var src=filter==='top'?top:filter==='int'?it:data,h='';
 src.forEach(function(v){var evs=filter==='live'?v.evs.filter(function(e){return e.status.type.state==='in'}):v.evs;if(!evs.length)return;
 h+='<section class="sec"><div class="sh">'+(v.logo?'<img alt="" src="'+esc(v.logo)+'" onerror="this.style.display=\'none\'">':'')+'<b>'+esc(v.c.n)+'</b><span>'+esc(v.c.c)+'</span></div><div class="card">'+evs.map(function(e){return match(e,e.id)}).join('')+'</div></section>'});
-$('out').innerHTML=h||'<div class="empty">'+(filter==='live'?'Niciun meci în desfășurare acum.':'Nicio partidă în această zi, în competițiile urmărite.')+'</div>';
-document.title=(live?'('+live+' live) ':'')+'Rezultate fotbal';
-$('sub').textContent=tot+' meciuri'+(live?' · '+live+' în desfășurare':'')+' · Top 5 ligi și competiții internaționale';
-$('ft').innerHTML='Actualizat la '+fmtT.format(lastOk)+' · orele sunt în fusul București'+(errs?' · '+errs+' competiții nu s-au încărcat':'')+'<br>Date: ESPN (sursă neoficială, pot apărea întârzieri la scor)';build()}
+$('out').innerHTML=h||'<div class="empty">'+(filter==='live'?'Niciun meci în desfășurare acum.':'Nicio partidă în această zi, în competițiile urmărite.')+'</div>';build()}
 function keyOf(r,c){var e=grid[r]&&grid[r][c];return e?(e.id||e.dataset.f||e.dataset.id):null}
 function build(){var k=keyOf(cur.r,cur.c),rr=cur.r;grid=[[$('pv'),$('nx'),$('td'),$('rf')],Array.prototype.slice.call(document.querySelectorAll('.chip'))];
-document.querySelectorAll('.m').forEach(function(m){grid.push([m])});
-var found=false;if(k){for(var r=0;r<grid.length&&!found;r++)for(var c=0;c<grid[r].length;c++)if(keyOf(r,c)===k){cur={r:r,c:c};found=true;break}}
-if(!found){cur={r:Math.min(rr,grid.length-1),c:0};if(cur.r<0)cur.r=0}
+var rows=[],lt=0;document.querySelectorAll('#out .fv,#out .m').forEach(function(el){var t=el.getBoundingClientRect().top+window.pageYOffset;if(rows.length&&el.classList.contains('fv')&&Math.abs(t-lt)<8)rows[rows.length-1].push(el);else{rows.push([el]);lt=t}});
+rows.forEach(function(r){grid.push(r)});
+var found=false;if(k&&!resetCur){for(var r=0;r<grid.length&&!found;r++)for(var c=0;c<grid[r].length;c++)if(keyOf(r,c)===k){cur={r:r,c:c};found=true;break}}
+if(!found){if(resetCur){cur={r:Math.min(2,grid.length-1),c:0};if(grid.length>2)resetCur=false;window.scrollTo(0,0)}else{cur={r:Math.min(rr,grid.length-1),c:0};if(cur.r<0)cur.r=0}}
 paint(false)}
 function paint(scroll){var o=document.querySelector('.f');if(o)o.classList.remove('f');var e=grid[cur.r]&&grid[cur.r][cur.c];if(!e)return;e.classList.add('f');
 if(scroll){var hb=document.querySelector('header').getBoundingClientRect().bottom,r=e.getBoundingClientRect(),H=window.innerHeight;if(cur.r<2)window.scrollTo(0,0);else if(r.top<hb+14)window.scrollBy(0,r.top-hb-14);else if(r.bottom>H-30)window.scrollBy(0,r.bottom-H+30)}}
+
+var FAV=[];try{FAV=JSON.parse(localStorage.getItem('fav')||'[]')}catch(e){}
+function saveFav(){try{localStorage.setItem('fav',JSON.stringify(FAV))}catch(e){}}
+function isFav(l,t){return FAV.some(function(x){return x.l===l&&x.t===t})}
+var FC={},TC={},favTok=0,resetCur=false;
+var PL=[['eng.1','Premier League','Anglia'],['esp.1','La Liga','Spania'],['ita.1','Serie A','Italia'],['ger.1','Bundesliga','Germania'],['fra.1','Ligue 1','Franța'],['rou.1','SuperLiga','România'],['por.1','Primeira Liga','Portugalia'],['ned.1','Eredivisie','Olanda'],['tur.1','Süper Lig','Turcia']];
+function jf(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})}
+function teamEvents(f){var k=f.l+f.t,c=FC[k];if(c&&Date.now()-c.at<120000)return Promise.resolve(c.ev);
+var b='https://site.api.espn.com/apis/site/v2/sports/soccer/'+f.l+'/teams/'+f.t+'/schedule';
+return Promise.all([jf(b).catch(function(){return{events:[]}}),jf(b+'?fixture=true').catch(function(){return{events:[]}})]).then(function(r){var seen={},all=[];(r[0].events||[]).concat(r[1].events||[]).forEach(function(e){if(!seen[e.id]){seen[e.id]=1;all.push(e)}});FC[k]={at:Date.now(),ev:all};return all})}
+function normEv(e){var cp=e.competitions[0];e.status=cp.status;cp.competitors.forEach(function(x){var t=x.team;if(!t.logo)t.logo=(t.logos&&t.logos[0]&&t.logos[0].href)||'';if(x.score&&typeof x.score==='object')x.score=x.score.displayValue});return e}
+function renderFav(){var tok=++favTok,hd='<div class="acts"><button class="btn fv" id="pk">Alege echipe</button></div>';
+if(!FAV.length){$('out').innerHTML=hd+'<div class="empty">Nu ai echipe favorite încă. Apasă „Alege echipe".</div>';build();return}
+$('out').innerHTML=hd+'<div class="load"><div class="sp"></div></div>';build();
+Promise.all(FAV.map(teamEvents)).then(function(all){if(tok!==favTok||filter!=='fav')return;showDate=true;var h=hd;
+FAV.forEach(function(f,i){var ev=all[i].map(normEv).sort(function(a,b){return new Date(a.date)-new Date(b.date)});
+var st=function(x){return ev.filter(function(e){return e.status.type.state===x})},pick=st('in').concat(st('post').slice(-1),st('pre').slice(0,1));
+h+='<section class="sec"><div class="sh"><img alt="" src="'+esc(f.g)+'"><b>'+esc(f.n)+'</b><span>'+esc(f.c)+'</span></div><div class="card">'+(pick.length?pick.map(function(e){return match(e,e.id)}).join(''):'<div class="empty">Nicio partidă găsită</div>')+'</div></section>'});
+showDate=false;$('out').innerHTML=h;build()})}
+var TJ=null;function leagueTeams(l){if(!TJ)TJ=fetch('teams.json').then(function(r){return r.json()}).catch(function(){TJ=null;return{}});return TJ.then(function(j){return j[l]||[]})}
+function renderPick(){var tok=++favTok,hd='<div class="acts"><button class="btn fv" id="dn">&#8249; Gata</button><span class="hintx">OK adaugă sau scoate o echipă</span></div>';
+$('out').innerHTML=hd+'<div class="load"><div class="sp"></div></div>';build();
+Promise.all(PL.map(function(p){return leagueTeams(p[0])})).then(function(all){if(tok!==favTok||filter!=='pick')return;var h=hd;
+PL.forEach(function(p,i){if(!all[i].length)return;h+='<section class="sec"><div class="sh"><b>'+esc(p[1])+'</b><span>'+esc(p[2])+'</span></div><div class="tg">'+all[i].map(function(t){return'<button class="fv tmb'+(isFav(p[0],t.id)?' on':'')+'" data-id="t:'+p[0]+':'+t.id+'" data-l="'+p[0]+'" data-t="'+t.id+'" data-g="'+esc(t.g)+'"><img alt="" loading="lazy" decoding="async" src="'+esc(t.g)+'"><span>'+esc(t.n)+'</span></button>'}).join('')+'</div></section>'});
+$('out').innerHTML=h;build()})}
+function toggleFav(b){var l=b.dataset.l,t=b.dataset.t,i=-1;FAV.forEach(function(x,j){if(x.l===l&&x.t===t)i=j});
+if(i>=0){FAV.splice(i,1);b.classList.remove('on')}else{if(FAV.length>=8)return;var pl=PL.filter(function(p){return p[0]===l})[0];FAV.push({l:l,t:t,n:b.querySelector('span').textContent,g:b.dataset.g,c:pl?pl[1]:''});b.classList.add('on')}
+saveFav();var n=document.querySelector('.chip[data-f="fav"] .n');if(n)n.textContent=FAV.length}
 function head(){$('dy').innerHTML=longDay(day)+(label(day)?'<small>'+label(day)+'</small>':'')}
 function set(s){day=s;opened={};head();load()}
 function sched(){clearTimeout(timer);var live=data.some(function(v){return v.evs.some(function(e){return e.status.type.state==='in'})});timer=setTimeout(function(){load(true)},live?30000:180000)}
@@ -132,13 +173,13 @@ $('pv').onclick=function(){set(addDays(day,-1))};$('nx').onclick=function(){set(
 function pickChip(b){filter=b.dataset.f;render()}
 function toggleM(m){var i=m.dataset.id;opened[i]=!opened[i];var n=m.nextElementSibling;if(n&&n.classList.contains('g'))n.remove();if(opened[i]&&GL[i])m.insertAdjacentHTML('afterend',detG(i))}
 $('ch').onclick=function(e){var b=e.target.closest('.chip');if(b)pickChip(b)};
-$('out').onclick=function(e){var m=e.target.closest('.m.has');if(m)toggleM(m)};
-window.onBack=function(){return false};
+$('out').onclick=function(e){var b=e.target.closest('.fv');if(b){if(b.id==='pk'){filter='pick';resetCur=true;render()}else if(b.id==='dn'){filter='fav';resetCur=true;render()}else if(b.classList.contains('tmb'))toggleFav(b);return}var m=e.target.closest('.m.has');if(m)toggleM(m)};
+window.onBack=function(){if(filter==='pick'){filter='fav';resetCur=true;render();return true}if(filter==='fav'){filter='all';render();return true}return false};
 document.addEventListener('keydown',function(e){var k=e.key;if(k!=='ArrowLeft'&&k!=='ArrowRight'&&k!=='ArrowUp'&&k!=='ArrowDown'&&k!=='Enter')return;e.preventDefault();if(!grid.length)return;
 var row=grid[cur.r];
 if(k==='ArrowLeft'){if(cur.c>0){cur.c--;paint(true)}}
 else if(k==='ArrowRight'){if(cur.c<row.length-1){cur.c++;paint(true)}}
-else if(k==='ArrowDown'||k==='ArrowUp'){var r=cur.r+(k==='ArrowDown'?1:-1);if(r>=0&&r<grid.length){var c=cur.c;if(cur.r===0&&r===1)c=Math.min(cur.c,grid[1].length-1);else if(cur.r===1&&r===0)c=Math.min(cur.c,3);else c=0;cur={r:r,c:Math.min(c,grid[r].length-1)};paint(true)}}
+else if(k==='ArrowDown'||k==='ArrowUp'){var r=cur.r+(k==='ArrowDown'?1:-1);if(r>=0&&r<grid.length){var c=cur.c;if(cur.r===0&&r===1)c=Math.min(cur.c,grid[1].length-1);else if(cur.r===1&&r===0)c=Math.min(cur.c,3);else if(cur.r>=2&&r>=2)c=cur.c;else c=0;cur={r:r,c:Math.min(c,grid[r].length-1)};paint(true)}}
 else{var e2=row[cur.c];if(!e2)return;if(e2.classList.contains('chip')){pickChip(e2)}else if(e2.classList.contains('m')){if(e2.classList.contains('has'))toggleM(e2)}else e2.click()}});
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&lastOk&&new Date()-lastOk>60000)load(true)});
 head();load();build();

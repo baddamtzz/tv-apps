@@ -5,4 +5,7 @@ site/filme/
 .DS_Store
 adb-tools/
 build-tools/
-launcher/
+launcher/build/
+launcher/assets/wall.jpg
+site/fotbal/teams.json
+scripts/__pycache__/

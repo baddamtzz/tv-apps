@@ -88,6 +88,10 @@ def build_rows(items):
     add('gm', 'movie', 'Pietre ascunse', 'Nota peste 7,7, dar mai puțin cunoscute', sorted([x for x in movies if x['rating'] >= 7.7 and 25000 <= x['votes'] <= 120000 and x['year'] >= 1980], key=lambda x: wr(x, 10000), reverse=True))
     for g, gn in (('Sci-Fi', 'SF'), ('Thriller', 'Thriller'), ('Comedy', 'Comedie'), ('Animation', 'Animație'), ('Horror', 'Groază')):
         add('g_' + g, 'movie', gn, 'Cele mai bune filme din gen', sorted([x for x in movies if g in x['genres'] and x['votes'] >= 80000], key=wr, reverse=True))
+    allx = movies + series
+    for g, gn in (('Drama', 'Dramă'), ('Action', 'Acțiune'), ('Adventure', 'Aventură'), ('Crime', 'Crimă'), ('Mystery', 'Mister'), ('Romance', 'Romantic'),
+                  ('Fantasy', 'Fantasy'), ('Family', 'Familie'), ('Documentary', 'Documentar'), ('War', 'Război'), ('History', 'Istorie'), ('Biography', 'Biografie')):
+        add('gx_' + g, 'genre', gn, 'Filme și seriale, cele mai bine cotate', sorted([x for x in allx if g in x['genres'] and x['votes'] >= (60000 if g != 'Documentary' else 15000)], key=lambda x: wr(x, 50000), reverse=True))
     add('ts', 'series', 'Top seriale IMDb', 'Cele mai bine cotate, după nota ponderată', sorted([x for x in series if x['votes'] >= 50000], key=lambda x: wr(x, 50000), reverse=True))
     add('ns', 'series', 'Seriale noi', 'Începute din %d, cu nota peste 7,5' % (YEAR - 2), sorted([x for x in series if x['year'] >= YEAR - 2 and x['votes'] >= 15000 and x['rating'] >= 7.5], key=lambda x: -x['votes']))
     for g, gn in (('Crime', 'Crimă'), ('Comedy', 'Comedie'), ('Sci-Fi', 'SF și fantasy')):
@@ -109,25 +113,22 @@ def jget(url):
 
 
 def wget(url):
-    if _w429[0] >= 3:
-        raise RuntimeError('Wikipedia limitează cererile, sar peste descrieri')
-    for attempt in range(2):
+    for attempt in range(5):
         with _wlock:
-            wait = 0.7 - (time.time() - _wlast[0])
+            wait = 1.0 - (time.time() - _wlast[0])
             if wait > 0:
                 time.sleep(wait)
             _wlast[0] = time.time()
         try:
             req = urllib.request.Request(url, headers={'User-Agent': WIKI_UA})
-            with urllib.request.urlopen(req, timeout=30) as r:
+            with urllib.request.urlopen(req, timeout=60) as r:
                 return json.loads(r.read().decode('utf-8'))
         except urllib.error.HTTPError as e:
-            if e.code == 429:
-                _w429[0] += 1
-                if attempt < 1 and _w429[0] < 3:
-                    time.sleep(5)
-                    continue
-            raise
+            if e.code != 429 or attempt == 4:
+                raise
+            pause = min(int(e.headers.get('Retry-After') or 15 * (attempt + 1)), 90)
+            log('  Wikimedia cere pauză %ds (%s)' % (pause, url[:70]))
+            time.sleep(pause)
 
 
 def meta(tid):
@@ -186,6 +187,52 @@ def short(s, n=360):
     return cut[:i + 1] if i > 120 else cut.rsplit(' ', 1)[0] + '…'
 
 
+WIKI = {}
+
+
+def wiki_fill(ids):
+    """Descrieri de pe Wikipedia (ro, apoi en), în loturi: IMDb id -> articol prin API-ul Wikidata, apoi începutul articolului."""
+    ids = sorted(set(ids))
+    links = {}
+    WD = 'https://www.wikidata.org/w/api.php?format=json&'
+    try:
+        qids = []
+        for i in range(0, len(ids), 25):
+            q = 'haswbstatement:' + '|'.join('P345=%s' % x for x in ids[i:i + 25])
+            d = wget(WD + 'action=query&list=search&srlimit=50&srsearch=' + urllib.parse.quote(q))
+            qids += [h['title'] for h in d['query']['search']]
+        for i in range(0, len(qids), 25):
+            d = wget(WD + 'action=wbgetentities&props=claims|sitelinks&sitefilter=enwiki|rowiki&ids=' + '|'.join(qids[i:i + 25]))
+            for e in d.get('entities', {}).values():
+                imdb = [c['mainsnak']['datavalue']['value'] for c in e.get('claims', {}).get('P345', []) if 'datavalue' in c['mainsnak']]
+                sl = {k[:2]: v['title'] for k, v in e.get('sitelinks', {}).items()}
+                for t in imdb:
+                    if t in ids:
+                        links[t] = sl
+        for lang in ('ro', 'en'):
+            want = [(i, l[lang]) for i, l in links.items() if lang in l and i not in WIKI]
+            for k in range(0, len(want), 20):
+                part = want[k:k + 20]
+                url = ('https://%s.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&exchars=800&redirects=1&format=json&titles=%s'
+                       % (lang, urllib.parse.quote('|'.join(t for _, t in part))))
+                d = wget(url).get('query', {})
+                alias = {}
+                for n in d.get('normalized', []):
+                    alias[n['from']] = n['to']
+                for n in d.get('redirects', []):
+                    alias[n['from']] = n['to']
+                ext = {p.get('title'): p.get('extract', '') for p in d.get('pages', {}).values()}
+                for i, t in part:
+                    t2 = alias.get(t, t)
+                    t2 = alias.get(t2, t2)
+                    txt = strip(ext.get(t2, ''))
+                    if len(txt) >= 80 and 'may refer to' not in txt and 'poate să se refere' not in txt:
+                        WIKI[i] = short(txt)
+        log('  descrieri Wikipedia: %d din %d' % (len(WIKI), len(ids)))
+    except Exception as e:
+        log('  descrieri Wikipedia eșuate:', e)
+
+
 def synopsis(x):
     f = os.path.join(CACHE, 'syn', x['id'] + '.json')
     if os.path.exists(f):
@@ -195,20 +242,13 @@ def synopsis(x):
         if x['type'] == 'series':
             d = jget('https://api.tvmaze.com/lookup/shows?imdb=' + x['id'])
             out = {'syn': short(strip(d.get('summary'))), 'net': (d.get('network') or d.get('webChannel') or {}).get('name'), 'status': d.get('status')}
-        else:
-            q = urllib.parse.quote('%s %d film' % (x['title'], x['year']))
-            s = wget('https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=%s&format=json&srlimit=3' % q)
-            norm = lambda t: re.sub(r'[^a-z0-9]', '', t.lower())
-            for hit in s['query']['search']:
-                if norm(x['title']) in norm(hit['title']):
-                    d = wget('https://en.wikipedia.org/api/rest_v1/page/summary/' + urllib.parse.quote(hit['title'].replace(' ', '_'), safe=''))
-                    if d.get('type') == 'standard':
-                        out = {'syn': short(d.get('extract', ''))}
-                        break
+        elif x['id'] in WIKI:
+            out = {'syn': WIKI[x['id']]}
     except Exception as e:
         log('  descriere eșuată', x['id'], e)
         return {}
-    json.dump(out, open(f, 'w'))
+    if out:
+        json.dump(out, open(f, 'w'))
     time.sleep(0.1)
     return out
 
@@ -272,6 +312,57 @@ def letterboxd(user):
     return {'user': user, 'demo': LB_DEMO, 'items': out}
 
 
+# ---------- Letterboxd: de văzut ----------
+LB_UA = 'tv-apps/1.0 (proiect personal; github.com/baddamtzz/tv-apps)'
+
+
+def watchlist(user, ratings_by_id):
+    names = []
+    try:
+        for page in (1, 2, 3):
+            url = 'https://letterboxd.com/%s/watchlist/%s' % (urllib.parse.quote(user), '' if page == 1 else 'page/%d/' % page)
+            req = urllib.request.Request(url, headers={'User-Agent': LB_UA})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                body = r.read().decode('utf-8', 'replace')
+            found = re.findall(r'data-item-name="([^"]+)" data-item-slug="([^"]+)"', body)
+            if not found:
+                break
+            names += found
+            time.sleep(1.2)
+    except Exception as e:
+        log('Watchlist Letterboxd eșuat:', e)
+        if not names:
+            return {'user': user, 'error': 'Nu am putut citi lista „de văzut" de pe Letterboxd.', 'items': []}
+    out, seen = [], set()
+    for nm, slug in names:
+        nm = html.unescape(nm)
+        m = re.match(r'^(.*) \((\d{4})\)$', nm)
+        title, year = (m.group(1), int(m.group(2))) if m else (nm, None)
+        if slug in seen:
+            continue
+        seen.add(slug)
+        try:
+            q = urllib.parse.quote(title.lower())
+            d = jget('https://v3.sg.media-imdb.com/suggestion/%s/%s.json' % (re.sub(r'[^a-z0-9]', '', title.lower()[:1]) or 'a', q))
+            norm = lambda t: re.sub(r'[^a-z0-9]', '', (t or '').lower())
+            cand = [e for e in d.get('d', []) if str(e.get('id', '')).startswith('tt') and e.get('qid') in ('movie', 'tvMovie', 'tvMiniSeries')]
+            pick = next((e for e in cand if norm(e.get('l')) == norm(title) and (not year or abs((e.get('y') or 0) - year) <= 1)), None) \
+                or next((e for e in cand if year and abs((e.get('y') or 0) - year) <= 0 and norm(title) in norm(e.get('l'))), None)
+            time.sleep(0.15)
+        except Exception as e:
+            log('  căutare eșuată', title, e)
+            continue
+        if not pick:
+            continue
+        base = dict(ratings_by_id.get(pick['id']) or {'id': pick['id'], 'type': 'movie', 'title': pick.get('l') or title, 'year': pick.get('y') or year, 'rating': None, 'votes': 0, 'genres': [], 'runtime': None})
+        base['wl'] = True
+        base['link'] = 'https://letterboxd.com/film/%s/' % slug
+        out.append(base)
+        if len(out) >= 40:
+            break
+    return {'user': user, 'items': out}
+
+
 # ---------- main ----------
 def main():
     t0 = time.time()
@@ -284,9 +375,15 @@ def main():
         for i in r['ids']:
             if i not in ids:
                 ids.append(i)
+    log('Letterboxd, de văzut @%s...' % LB_USER)
+    wl = watchlist(LB_USER, byid)
+    log('  de văzut: %d filme' % len(wl['items']))
+    log('Descrieri Wikipedia...')
+    wiki_fill([i for i in ids if byid[i]['type'] == 'movie'] + [x['id'] for x in wl['items']])
     log('Pozele și detaliile pentru %d titluri...' % len(ids))
     with cf.ThreadPoolExecutor(4) as ex:
         full = list(ex.map(lambda i: enrich(byid[i]), ids))
+        wl['items'] = [x for x in ex.map(enrich, wl['items']) if x.get('poster')]
     data_items = {x['id']: x for x in full}
     for r in rows:
         r['ids'] = [i for i in r['ids'] if data_items[i].get('poster')]
@@ -295,7 +392,7 @@ def main():
     lb = letterboxd(LB_USER)
     top = [i for i in next(r for r in rows if r['id'] == 'tm')['ids'][:30]]
     pick = random.Random(datetime.date.today().isoformat()).choice(top)
-    data = {'generated': datetime.datetime.now().strftime('%Y-%m-%d %H:%M'), 'rows': rows, 'items': data_items, 'lb': lb, 'pick': pick}
+    data = {'generated': datetime.datetime.now().strftime('%Y-%m-%d %H:%M'), 'rows': rows, 'items': data_items, 'lb': lb, 'wl': wl, 'pick': pick}
     json.dump(data, open(os.path.join(BASE, 'data.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     build_html()
     log('Gata în %ds: %d titluri, %d rânduri, %d filme Letterboxd. index.html actualizat.' % (time.time() - t0, len(data_items), len(rows), len(lb['items'])))

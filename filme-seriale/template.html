@@ -64,7 +64,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-seri
 <body>
 <div id="stage">
 <div class="bg" id="b0"></div><div class="bg" id="b1"></div><div class="shade"></div>
-<div id="top"><span class="bk">‹</span><span class="nm">Filme și seriale</span><span class="tab on" data-t="movie">Filme</span><span class="tab" data-t="series">Seriale</span><span class="tab" data-t="lb">Letterboxd</span><div id="clk"><span id="ck"></span><small id="gn"></small></div></div>
+<div id="top"><span class="bk">‹</span><span class="nm">Filme și seriale</span><span class="tab on" data-t="movie">Filme</span><span class="tab" data-t="series">Seriale</span><span class="tab" data-t="genre">Genuri</span><span class="tab" data-t="lb">Letterboxd</span><span class="tab" data-t="wl">De văzut</span><div id="clk"><span id="ck"></span><small id="gn"></small></div></div>
 <div id="hero"><div id="kick"></div><div id="ttl"></div><div id="meta"></div><div id="syn"></div><div id="cast"></div><div id="seen"></div></div>
 <div id="pw"><div id="pst"></div></div>
 <div id="rows"></div>
@@ -83,15 +83,16 @@ function gen(g){return (g||[]).slice(0,3).map(function(x){return GEN[x]||x}).joi
 var months=['ian.','feb.','mar.','apr.','mai','iun.','iul.','aug.','sept.','oct.','nov.','dec.'];
 function dmy(s){if(!s)return'';var p=s.split(/[- ]/);return (+p[2])+' '+months[+p[1]-1]+' '+p[0]}
 var seen={};((D.lb&&D.lb.items)||[]).forEach(function(x){seen[norm(x.title)+x.year]=x});
-var tab='movie',R=[],cur={r:0,c:0},bgOn=0,TABS=['movie','series','lb'],zone='rows',tf=0,ht=0,cards=[],sts=[];
+var tab='movie',R=[],cur={r:0,c:0},bgOn=0,TABS=['movie','series','genre','lb','wl'],zone='rows',tf=0,ht=0,cards=[],sts=[];
 
 function tabRows(){
+if(tab==='wl'){var W=D.wl||{items:[]};if(W.error||!W.items.length)return[];return[{title:'De văzut',sub:'Lista ta de pe Letterboxd, @'+W.user,items:W.items}]}
 if(tab==='lb'){var L=D.lb||{items:[]};if(L.error||!L.items.length)return[];var its=L.items.map(function(x){x.lb=true;return x}),big=its.filter(function(x){return x.rating>=4.5});if(big.length<3)big=its.filter(function(x){return x.rating>=4});var rows=[{title:'Ce ai văzut recent',sub:'Jurnalul tău de pe Letterboxd, @'+L.user,items:its}];if(big.length>=3)rows.push({title:'Notele tale mari',sub:'Filmele pe care le-ai notat cel mai bine',items:big});return rows}
 return D.rows.filter(function(r){return r.kind===tab}).map(function(r){return{title:r.title,sub:r.sub,rank:r.id==='tm'||r.id==='ts',items:r.ids.map(function(i){return D.items[i]})}})}
 
-function card(it,r,ci){var sn=!it.lb&&seen[norm(it.title)+it.year];return '<div class="c" data-r="'+r+'" data-c="'+ci+'">'+(it.poster?'<img alt="" decoding="async" data-s="'+it.poster+'">':'')+(R[r].rank&&ci<10?'<span class="rk">'+(ci+1)+'</span>':'')+(sn?'<span class="sn">VĂZUT</span>':'')+(it.lb?(it.rating?'<span class="rb g">'+stars(it.rating)+'</span>':''):'<span class="rb">★ '+it.rating.toFixed(1).replace('.',',')+'</span>')+'</div>'}
+function card(it,r,ci){var sn=!it.lb&&seen[norm(it.title)+it.year];return '<div class="c" data-r="'+r+'" data-c="'+ci+'">'+(it.poster?'<img alt="" decoding="async" data-s="'+it.poster+'">':'')+(R[r].rank&&ci<10?'<span class="rk">'+(ci+1)+'</span>':'')+(sn?'<span class="sn">VĂZUT</span>':'')+(it.lb?(it.rating?'<span class="rb g">'+stars(it.rating)+'</span>':''):(it.rating!=null?'<span class="rb">★ '+it.rating.toFixed(1).replace('.',',')+'</span>':''))+'</div>'}
 function render(){R=tabRows();var h='';R.forEach(function(r,ri){h+='<div class="row" data-r="'+ri+'"><div class="rt">'+esc(r.title)+'<span class="rs">'+esc(r.sub)+'</span></div><div class="sc"><div class="st">'+r.items.map(function(it,ci){return card(it,ri,ci)}).join('')+'</div></div></div>'});
-if(!R.length){var L=D.lb||{};h='<div class="msg">'+(tab==='lb'?(L.error||'Nu am găsit filme în jurnalul Letterboxd.')+'<br>Rulează <b>python3 actualizeaza.py USERNAME</b> cu contul tău.':'Nu sunt titluri.')+'</div>'}
+if(!R.length){var L=D.lb||{};h='<div class="msg">'+(tab==='lb'?(L.error||'Nu am găsit filme în jurnalul Letterboxd.'):tab==='wl'?(((D.wl||{}).error)||'Lista „de văzut" de pe Letterboxd e goală.'):'Nu sunt titluri.')+'</div>'}
 $('rows').innerHTML='<div id="rin">'+h+'</div>';cards=[];sts=[];document.querySelectorAll('.row').forEach(function(row){cards.push(row.querySelectorAll('.c'));sts.push(row.querySelector('.st'))});cur={r:0,c:0};if(R.length){hydrate(0,0);hydrate(1,0);focus(0,0,true)}else{$('kick').textContent='';$('ttl').textContent=tab==='lb'?'Letterboxd':'';$('meta').innerHTML='';$('syn').textContent='';$('cast').textContent='';$('seen').textContent='';$('pst').innerHTML=''}}
 
 function hydrate(r,c){var cs=cards[r];if(!cs)return;for(var i=Math.max(0,c-3);i<Math.min(cs.length,c+14);i++){var im=cs[i].firstChild;if(im&&im.tagName==='IMG'&&!im.src&&im.dataset.s)im.src=im.dataset.s}}
@@ -102,7 +103,7 @@ $('kick').textContent=R[r].title+rk+(it.lb&&L.demo?' · cont demonstrativ':'');
 $('ttl').textContent=it.title;
 var m='';
 if(it.lb){m=(it.rating?'<span class="lbs">'+stars(it.rating)+'</span><span class="dot">·</span>':'')+'<span>'+(it.year||'')+'</span>'+(it.date?'<span class="dot">·</span><span>văzut pe '+dmy(it.date)+(it.rewatch?' (revăzut)':'')+'</span>':'')}
-else{var y=it.type==='series'?(it.year+'–'+(it.end||(it.status==='Ended'?'':'')))+'':it.year;m='<span class="imdb">IMDb</span><span id="rv">'+it.rating.toFixed(1).replace('.',',')+'</span><span style="opacity:.6;font-size:15px">/10 · '+fmtV(it.votes)+' voturi</span><span class="dot">·</span><span>'+y+'</span>'+(it.runtime?'<span class="dot">·</span><span>'+runtime(it.runtime)+'</span>':'')+(it.genres&&it.genres.length?'<span class="dot">·</span><span>'+esc(gen(it.genres))+'</span>':'')+(it.net?'<span class="dot">·</span><span>'+esc(it.net)+'</span>':'')}
+else{var y=it.type==='series'?(it.year+'–'+(it.end||(it.status==='Ended'?'':'')))+'':it.year;m=(it.rating!=null?'<span class="imdb">IMDb</span><span id="rv">'+it.rating.toFixed(1).replace('.',',')+'</span><span style="opacity:.6;font-size:15px">/10 · '+fmtV(it.votes)+' voturi</span><span class="dot">·</span>':'')+'<span>'+y+'</span>'+(it.runtime?'<span class="dot">·</span><span>'+runtime(it.runtime)+'</span>':'')+(it.genres&&it.genres.length?'<span class="dot">·</span><span>'+esc(gen(it.genres))+'</span>':'')+(it.net?'<span class="dot">·</span><span>'+esc(it.net)+'</span>':'')}
 $('meta').innerHTML=m;
 $('syn').textContent=it.lb?(it.review||'Fără recenzie scrisă.'):(it.syn||'');
 $('cast').textContent=!it.lb&&it.cast?'Cu '+it.cast:'';
@@ -118,7 +119,7 @@ $('rows').addEventListener('click',function(e){var c=e.target.closest('.c');if(c
 
 function detail(it){var h='<img alt="" src="'+(it.poster||'')+'"><div style="min-width:0">';
 if(it.lb){h+='<div style="font-size:13px;letter-spacing:.14em;color:#00e054;text-transform:uppercase">Letterboxd · @'+esc((D.lb||{}).user)+'</div><h2>'+esc(it.title)+(it.year?' <span style="opacity:.5;font-weight:400">'+it.year+'</span>':'')+'</h2>'+(it.rating?'<div class="lbs" style="font-size:26px">'+stars(it.rating)+'</div>':'')+(it.date?'<div style="color:rgba(255,255,255,.6);font-size:15px;margin-top:4px">Văzut pe '+dmy(it.date)+(it.rewatch?' · revăzut':'')+'</div>':'')+'<p>'+esc(it.review||'Fără recenzie scrisă.')+'</p>'}
-else{var sn=seen[norm(it.title)+it.year];h+='<div style="font-size:13px;letter-spacing:.14em;color:rgba(255,255,255,.55);text-transform:uppercase">'+(it.type==='series'?'Serial':'Film')+'</div><h2>'+esc(it.title)+' <span style="opacity:.5;font-weight:400">'+it.year+(it.type==='series'?'–'+(it.end||''):'')+'</span></h2><div style="display:flex;align-items:center;gap:12px"><span class="imdb">IMDb</span><span style="font-size:26px;font-weight:700">'+it.rating.toFixed(1).replace('.',',')+'</span><span style="opacity:.6">/10 · '+fmtV(it.votes)+' voturi</span></div><div class="bar"><i style="width:'+it.rating*10+'%"></i></div><div style="margin:14px 0 4px">'+(it.genres||[]).map(function(g){return '<span class="ch">'+(GEN[g]||g)+'</span>'}).join('')+(it.runtime?'<span class="ch">'+runtime(it.runtime)+'</span>':'')+(it.net?'<span class="ch">'+esc(it.net)+'</span>':'')+'</div>'+(it.syn?'<p>'+esc(it.syn)+'</p>':'')+(it.cast?'<div style="color:rgba(255,255,255,.55);font-size:15px">Cu '+esc(it.cast)+'</div>':'')+(sn?'<div style="color:#00e054;font-weight:600;margin-top:10px">✓ Văzut de tine pe Letterboxd'+(sn.rating?' · '+stars(sn.rating):'')+'</div>':'')+''}
+else{var sn=seen[norm(it.title)+it.year];h+='<div style="font-size:13px;letter-spacing:.14em;color:rgba(255,255,255,.55);text-transform:uppercase">'+(it.type==='series'?'Serial':'Film')+'</div><h2>'+esc(it.title)+' <span style="opacity:.5;font-weight:400">'+it.year+(it.type==='series'?'–'+(it.end||''):'')+'</span></h2>'+(it.rating!=null?'<div style="display:flex;align-items:center;gap:12px"><span class="imdb">IMDb</span><span style="font-size:26px;font-weight:700">'+it.rating.toFixed(1).replace('.',',')+'</span><span style="opacity:.6">/10 · '+fmtV(it.votes)+' voturi</span></div><div class="bar"><i style="width:'+it.rating*10+'%"></i></div>':'')+'<div style="margin:14px 0 4px">'+(it.genres||[]).map(function(g){return '<span class="ch">'+(GEN[g]||g)+'</span>'}).join('')+(it.runtime?'<span class="ch">'+runtime(it.runtime)+'</span>':'')+(it.net?'<span class="ch">'+esc(it.net)+'</span>':'')+'</div>'+(it.syn?'<p>'+esc(it.syn)+'</p>':'')+(it.cast?'<div style="color:rgba(255,255,255,.55);font-size:15px">Cu '+esc(it.cast)+'</div>':'')+(sn?'<div style="color:#00e054;font-weight:600;margin-top:10px">✓ Văzut de tine pe Letterboxd'+(sn.rating?' · '+stars(sn.rating):'')+'</div>':'')+''}
 h+='<div class="hint">Apasă Înapoi sau OK ca să închizi</div></div>';$('dc').innerHTML=h;$('dt').style.display='flex'}
 function closeD(){$('dt').style.display='none'}
 window.onBack=function(){if($('dt').style.display==='flex'){closeD();return true}return false}
@@ -130,7 +131,7 @@ document.querySelectorAll('.tab').forEach(function(x){x.onclick=function(){zone=
 document.addEventListener('keydown',function(e){var k=e.key;if($('dt').style.display==='flex'){if(k==='Escape'||k==='Backspace'||k==='Enter')closeD();e.preventDefault();return}
 if(k==='ArrowRight'||k==='ArrowLeft'||k==='ArrowDown'||k==='ArrowUp'||k==='Enter')e.preventDefault();
 if(zone==='tabs'){
-if(k==='ArrowRight'&&tf<2){tf++;tabUi()}else if(k==='ArrowLeft'&&tf>0){tf--;tabUi()}
+if(k==='ArrowRight'&&tf<TABS.length-1){tf++;tabUi()}else if(k==='ArrowLeft'&&tf>0){tf--;tabUi()}
 else if(k==='Enter'){setTab(TABS[tf])}
 else if(k==='ArrowDown'&&R.length){zone='rows';tabUi()}
 return}

@@ -11,6 +11,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 
 concurrency:
   group: pages
@@ -27,10 +28,18 @@ jobs:
       - name: Topuri IMDb și Letterboxd
         working-directory: filme-seriale
         run: python3 -I actualizeaza.py bobec --web
+      - name: Echipele pentru pagina Fotbal
+        run: python3 -I scripts/echipe.py
       - name: Adună site-ul
         run: |
-          mkdir -p site/filme
+          mkdir -p site/filme site/launcher
           cp filme-seriale/index.html site/filme/index.html
+          cp launcher/assets/index.html site/launcher/index.html
+      - name: Păstrează programarea activă
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow enable pagini.yml --repo ${{ github.repository }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
